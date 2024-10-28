@@ -36,3 +36,41 @@ end
 
 @enduml
 
+
+@startuml "Негативный сценарий 1. Связь"
+
+title "Негативный сценарий\n1. Связь\nНарушенные ЦБ1 (также, возможно, 3 и 4)"
+
+autonumber
+
+participant "Операционный центр" as planner
+participant "1. Связь" as conn #red
+participant "2. Навигация" as navigation
+participant "3. Контроллер\nдвижения" as control
+participant "4. Грузовой отсек" as locker
+participant "5. Приводы движения" as servos
+
+planner -> conn: новый маршрут\nи команда на выезд
+conn -[#red]> control: новый маршрут\nи команда на выезд
+loop #red движение по маршруту 
+    control -> navigation: запрос координат
+    control <-- navigation: координаты
+    control -> conn: телеметрия
+    conn -> planner: телеметрия
+    group контроль положения
+        alt достигли точки выгрузки
+            control -> servos: остановка
+            control -> locker++: выгрузка
+            locker -> locker--: выгрузка
+            control -> control: возврат на базу\nостановка в конечной точке
+        else достигли конечной точки маршрута
+            control -> servos: остановка
+        else нужно ехать дальше        
+            control -> control++: расчёт движения
+            control -> servos--: управляющие команды\nповорот колёс\nскорость движения
+            servos -> servos: выполнение команд
+        end
+    end        
+end
+
+@enduml
